@@ -88,6 +88,47 @@ function buatTransaksi() {
     return transaksi;
 }
 
-bacaDariDB = () => {
+function bacaDariDB (){
+    var objStore = buatTransaksi().objectStore('mahasiswa');
+    objStore.openCursor().onsuccess = (e) => {
+        var result = e.target.result;
+        if (result){
+            console.log('Membaca ['+result.value.nim+'] dari IDB');
 
+            // append data ke tabel
+            var baris = tabel.insertRow(); // => <tr></tr>
+            baris.id = result.value.nim; // => <tr id="123"> </tr>
+            baris.insertCell().appendChild(document.createTextNode(result.value.nim));
+            baris.insertCell().appendChild(document.createTextNode(result.value.nama));
+            baris.insertCell().appendChild(document.createTextNode(result.value.gender));
+
+            // button
+            var btn = document.createElement('input');
+            btn.type = 'button';
+            btn.value = 'Hapus';
+            btn.id = result.value.nim;
+            btn.className = 'btn btn-danger btn-sm';
+            baris.insertCell().appendChild(btn);
+            result.continue();
+        }
+    }
+}
+
+tabel.addEventListener('click',hapusBaris);
+function hapusBaris(e) {
+    if (e.target.type === 'button'){
+        var hapus = confirm('Apakah anda yakin untuk menghapus data ?');
+        if (hapus){
+            tabel.deleteRow(tabel.rows.namedItem(e.target.id).sectionRowIndex);
+            // kemudian hapus dari DB ...
+            hapusDariDB(e.target.id);
+        }
+    }
+}
+
+function hapusDariDB(nim) {
+    var objStore = buatTransaksi().objectStore('mahasiswa');
+    var request = objStore.delete(nim);
+    request.error = tanganiError;
+    request.onsuccess = console.log('Berhasil menghapus Mahasiswa ['+nim+']');
 }
